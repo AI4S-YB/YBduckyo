@@ -1,0 +1,23 @@
+{
+    "ollama": {
+        "base_url": "http://192.168.87.153:11058",
+        "model": "qwen3.5:9b",
+        "timeout": 60
+    },
+    "pet": {
+        "default_name": "YBduckyo",
+        "default_color": "#FFB6C1",
+        "size": 80,
+        "speed": 2,
+        "max_pets": 5
+    },
+    "memory": {
+        "max_conversations": 50,
+        "memory_dir": "memory"
+    },
+    "ui": {
+        "always_on_top": true,
+        "chat_width": 400,
+        "chat_height": 500
+    }
+}
