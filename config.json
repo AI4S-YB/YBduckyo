@@ -1,7 +1,8 @@
 {
     "ollama": {
-        "base_url": "http://192.168.87.153:11058",
-        "model": "qwen3.5:9b",
+        "base_url": "https://api.xiaomimimo.com/v1",
+        "model": "mimo-v2-flash",
+        "api_key": "sk-cz0pj8qxqx3li14wjtldwknw8kyjisgqi3h4wmgdlbqq9fzq",
         "timeout": 60
     },
     "pet": {

@@ -6,28 +6,46 @@ from datetime import datetime
 from pathlib import Path
 
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QLabel, 
-                             QPushButton, QLineEdit, QMenu, QAction, QSystemTrayIcon)
+                             QPushButton, QLineEdit, QMenu, QAction, QSystemTrayIcon,
+                             QDialog, QTextEdit, QVBoxLayout, QScrollArea, QPushButton as QB)
 from PyQt5.QtCore import Qt, QTimer, QPoint, QRect, pyqtSignal, QThread, QTime
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QFont, QIcon, QCursor, QMovie
 
-from ollama_client import OllamaClient
 from memory import MemorySystem
+
+def get_client(config):
+    ollama_config = config.get("ollama", {})
+    base_url = ollama_config.get("base_url", "")
+    
+    if "xiaomimimo.com" in base_url or "api.mimo" in base_url:
+        from mimo_client import MiMoClient
+        return MiMoClient(
+            base_url=base_url,
+            model=ollama_config.get("model", "mimo-v2-flash"),
+            api_key=ollama_config.get("api_key", "")
+        )
+    else:
+        from ollama_client import OllamaClient
+        return OllamaClient(
+            base_url=base_url,
+            model=ollama_config.get("model", "llama3")
+        )
 
 
 class ChatThread(QThread):
     response_ready = pyqtSignal(str)
     error_occurred = pyqtSignal(str)
 
-    def __init__(self, ollama_client, message, memory_system):
+    def __init__(self, client, message, memory_system):
         super().__init__()
-        self.ollama_client = ollama_client
+        self.client = client
         self.message = message
         self.memory_system = memory_system
 
     def run(self):
         try:
             context = self.memory_system.get_context()
-            response = self.ollama_client.chat_with_tools(self.message, context)
+            response = self.client.chat(self.message, context)
             self.memory_system.add_conversation(self.message, response)
             self.response_ready.emit(response)
         except Exception as e:
@@ -53,8 +71,12 @@ class PetWindow(QWidget):
         self.gif_path = gif_path
         self.gif_hover_path = "duckygif/duckyorisehand.gif"
         self.gif_thinking_path = "duckygif/duckyogettheinfo.gif"
+        self.gif_search_path = "duckygif/duckyoqiaojianpan.gif"
         self.gif_sleep_path = "duckygif/duckyosleep.gif"
         self.gif_caboli_path = "duckygif/duckyocaboli.gif"
+        self.gif_feiwu_path = "duckygif/duckyofeiwu.gif"
+        self.gif_swanan_path = "duckygif/duckyoswanan.gif"
+        self.gif_xixi_path = "duckygif/duckyoxixi.gif"
         self.movie = QMovie(self.gif_path)
         self.movie.setScaledSize(QPixmap(self.gif_path).size().scaled(150, 150, Qt.KeepAspectRatio))
         self.movie_default = self.movie
@@ -63,7 +85,10 @@ class PetWindow(QWidget):
         self.pet_size = min(150, max(120, max(pixmap.width(), pixmap.height())))
         
         self.is_sleeping = False
+        self.is_swanan = False
         self.is_caboli = False
+        self.is_feiwu = False
+        self.is_xixi = False
         self.sleep_timeout = 120000
         
         self.setup_ui()
@@ -75,7 +100,7 @@ class PetWindow(QWidget):
         self.setAttribute(Qt.WA_Hover)
         
         self.canvas_width = max(280, self.pet_size + 30)
-        self.canvas_height = self.pet_size + 320
+        self.canvas_height = self.pet_size + 620
         
         self.setFixedSize(self.canvas_width, self.canvas_height)
         self.move(self.position)
@@ -85,13 +110,13 @@ class PetWindow(QWidget):
         self.gif_label.setMovie(self.movie)
         self.gif_label.setAlignment(Qt.AlignCenter)
         self.gif_label.setFixedSize(self.pet_size, self.pet_size)
-        self.gif_label.move((self.canvas_width - self.pet_size) // 2, 130)
+        self.gif_label.move((self.canvas_width - self.pet_size) // 2, 250)
         self.gif_label.setStyleSheet("background: transparent; border: none;")
         self.gif_label.setMouseTracking(True)
         self.gif_label.installEventFilter(self)
         
         self.input_frame = QWidget(self)
-        self.input_frame.setGeometry(0, self.pet_size + 140, self.canvas_width, 150)
+        self.input_frame.setGeometry(0, self.pet_size + 260, self.canvas_width, 150)
         self.input_frame.setStyleSheet("""
             QWidget {
                 background: rgba(255, 255, 255, 245);
@@ -184,11 +209,13 @@ class PetWindow(QWidget):
         self.check_leave(event)
 
     def on_hover_start(self):
-        if self.is_sleeping:
+        if self.is_sleeping or self.is_swanan:
             self.wake_up()
         
-        if self.is_caboli:
+        if self.is_caboli or self.is_feiwu or self.is_xixi:
             self.is_caboli = False
+            self.is_feiwu = False
+            self.is_xixi = False
         
         self.is_hovering = True
         
@@ -224,6 +251,8 @@ class PetWindow(QWidget):
         if not message:
             return
         
+        need_search = any(kw in message for kw in ["今天", "昨天", "明天", "新闻", "天气", "最新", "现在", "热搜", "几号", "星期几"])
+        
         self.movie.stop()
         if Path(self.gif_thinking_path).exists():
             self.movie = QMovie(self.gif_thinking_path)
@@ -231,10 +260,20 @@ class PetWindow(QWidget):
         self.gif_label.setMovie(self.movie)
         self.movie.start()
         
+        if need_search and Path(self.gif_search_path).exists():
+            QTimer.singleShot(2000, self._switch_to_search_gif)
+        
         if hasattr(self, '_chat_callback'):
             self._chat_callback(message)
         self.input_box.setPlaceholderText("等待回复...")
         self.input_box.clear()
+    
+    def _switch_to_search_gif(self):
+        self.movie.stop()
+        self.movie = QMovie(self.gif_search_path)
+        self.movie.setScaledSize(QPixmap(self.gif_search_path).size().scaled(150, 150, Qt.KeepAspectRatio))
+        self.gif_label.setMovie(self.movie)
+        self.movie.start()
 
     def setup_animation(self):
         self.walk_timer = QTimer(self)
@@ -248,10 +287,14 @@ class PetWindow(QWidget):
         
         self.caboli_timer = QTimer(self)
         self.caboli_timer.timeout.connect(self.check_caboli)
-        self.caboli_timer.start(5000)
+        self.caboli_timer.start(10000)
+        
+        self.feiwu_timer = QTimer(self)
+        self.feiwu_timer.timeout.connect(self.check_feiwu)
+        self.feiwu_timer.start(10000)
 
     def check_caboli(self):
-        if self.is_hovering or self.is_sleeping or self.is_caboli:
+        if self.is_hovering or self.is_sleeping or self.is_caboli or self.is_feiwu:
             return
         if hasattr(self, '_active_thread') and self._active_thread is not None:
             return
@@ -277,9 +320,34 @@ class PetWindow(QWidget):
         self.gif_label.setMovie(self.movie)
         self.movie.start()
 
-    def check_sleep(self):
-        if self.is_sleeping:
+    def check_feiwu(self):
+        if self.is_hovering or self.is_sleeping or self.is_caboli or self.is_feiwu:
             return
+        if hasattr(self, '_active_thread') and self._active_thread is not None:
+            return
+        if random.random() < 0.25:
+            self.play_feiwu()
+
+    def play_feiwu(self):
+        if not Path(self.gif_feiwu_path).exists():
+            return
+        self.is_feiwu = True
+        self.movie.stop()
+        self.movie = QMovie(self.gif_feiwu_path)
+        self.movie.setScaledSize(QPixmap(self.gif_feiwu_path).size().scaled(150, 150, Qt.KeepAspectRatio))
+        self.gif_label.setMovie(self.movie)
+        self.movie.start()
+        QTimer.singleShot(10000, self.stop_feiwu)
+
+    def stop_feiwu(self):
+        self.is_feiwu = False
+        self.movie.stop()
+        self.movie = QMovie(self.gif_path)
+        self.movie.setScaledSize(QPixmap(self.gif_path).size().scaled(150, 150, Qt.KeepAspectRatio))
+        self.gif_label.setMovie(self.movie)
+        self.movie.start()
+
+    def check_sleep(self):
         if self.is_hovering:
             self.last_activity_time = QTime.currentTime()
             return
@@ -287,8 +355,11 @@ class PetWindow(QWidget):
             return
             
         elapsed = self.last_activity_time.msecsTo(QTime.currentTime())
-        if elapsed >= self.sleep_timeout:
+        
+        if elapsed >= self.sleep_timeout and not self.is_sleeping:
             self.go_to_sleep()
+        elif elapsed >= 180000 and not self.is_swanan:
+            self.go_to_swanan()
 
     def go_to_sleep(self):
         self.is_sleeping = True
@@ -299,8 +370,18 @@ class PetWindow(QWidget):
         self.gif_label.setMovie(self.movie)
         self.movie.start()
 
+    def go_to_swanan(self):
+        self.is_swanan = True
+        self.movie.stop()
+        if Path(self.gif_swanan_path).exists():
+            self.movie = QMovie(self.gif_swanan_path)
+            self.movie.setScaledSize(QPixmap(self.gif_swanan_path).size().scaled(150, 150, Qt.KeepAspectRatio))
+        self.gif_label.setMovie(self.movie)
+        self.movie.start()
+
     def wake_up(self):
         self.is_sleeping = False
+        self.is_swanan = False
         self.last_activity_time = QTime.currentTime()
         self.movie.stop()
         self.movie = QMovie(self.gif_path)
@@ -309,13 +390,13 @@ class PetWindow(QWidget):
         self.movie.start()
 
     def walk(self):
-        if self.is_hovering or self.is_sleeping or self.is_caboli:
+        if self.is_hovering or self.is_sleeping or self.is_swanan or self.is_caboli or self.is_feiwu:
             return
             
         if random.random() < 0.02:
             self.target_position = QPoint(
-                random.randint(50, self.screen_rect.width() - 50),
-                random.randint(50, self.screen_rect.height() - 150)
+                random.randint(100, self.screen_rect.width() - 200),
+                random.randint(100, self.screen_rect.height() - 400)
             )
 
         dx = self.target_position.x() - self.position.x()
@@ -332,11 +413,7 @@ class PetWindow(QWidget):
         self.update()
 
     def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setPen(QColor(60, 60, 60))
-        painter.setFont(QFont("Arial", 9, QFont.Bold))
-        name_rect = QRect(0, self.pet_size + 5, self.pet_size + 20, 15)
-        painter.drawText(name_rect, Qt.AlignCenter, self.pet_name)
+        pass
 
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton:
@@ -344,6 +421,12 @@ class PetWindow(QWidget):
 
     def show_context_menu(self, pos):
         menu = QMenu(self)
+        
+        history_action = QAction("查看对话记录", self)
+        history_action.triggered.connect(self.show_conversation_history)
+        menu.addAction(history_action)
+        
+        menu.addSeparator()
         
         pet_menu = QMenu("切换宠物", self)
         colors = [("粉色猫咪", "#FFB6C1"), ("蓝色小狗", "#87CEEB"), ("绿色青蛙", "#90EE90"), ("橙色狐狸", "#FFD700")]
@@ -354,6 +437,44 @@ class PetWindow(QWidget):
         menu.addMenu(pet_menu)
 
         menu.exec_(pos)
+
+    def show_conversation_history(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("对话记录")
+        dialog.setFixedSize(500, 600)
+        
+        layout = QVBoxLayout(dialog)
+        
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        
+        text_edit = QTextEdit()
+        text_edit.setReadOnly(True)
+        
+        if hasattr(self, '_memory_system'):
+            conversations = self._memory_system.conversations
+            if conversations:
+                content = "<b>最近对话记录</b><br><br>"
+                for conv in reversed(conversations[-20:]):
+                    time_str = conv.get('timestamp', '')[:16]
+                    content += f"<b>[{time_str}]</b><br>"
+                    content += f"<b>主人:</b> {conv.get('user', '')}<br>"
+                    content += f"<b>YBduckyo:</b> {conv.get('pet', '')}<br>"
+                    content += "<br>" + "-"*50 + "<br><br>"
+                text_edit.setHtml(content)
+            else:
+                text_edit.setHtml("<center>暂无对话记录</center>")
+        else:
+            text_edit.setHtml("<center>暂无对话记录</center>")
+        
+        scroll.setWidget(text_edit)
+        layout.addWidget(scroll)
+        
+        close_btn = QB("关闭")
+        close_btn.clicked.connect(dialog.close)
+        layout.addWidget(close_btn)
+        
+        dialog.exec_()
 
     def change_pet(self, name, color):
         self.pet_name = name
@@ -366,10 +487,7 @@ class DesktopPetApp(QMainWindow):
         super().__init__()
         self.config = self.load_config()
         self.pets = []
-        self.ollama_client = OllamaClient(
-            base_url=self.config.get("ollama", {}).get("base_url", "http://localhost:11434"),
-            model=self.config.get("ollama", {}).get("model", "llama3")
-        )
+        self.client = get_client(self.config)
         self.memory_system = MemorySystem(
             memory_dir=self.config.get("memory", {}).get("memory_dir", "memory")
         )
@@ -439,9 +557,10 @@ class DesktopPetApp(QMainWindow):
             pet.input_box.setPlaceholderText("输入消息...")
             
             pet.movie.stop()
-            if Path(pet.gif_hover_path).exists():
-                pet.movie = QMovie(pet.gif_hover_path)
-                pet.movie.setScaledSize(QPixmap(pet.gif_hover_path).size().scaled(150, 150, Qt.KeepAspectRatio))
+            if Path(pet.gif_xixi_path).exists():
+                pet.is_xixi = True
+                pet.movie = QMovie(pet.gif_xixi_path)
+                pet.movie.setScaledSize(QPixmap(pet.gif_xixi_path).size().scaled(150, 150, Qt.KeepAspectRatio))
             pet.gif_label.setMovie(pet.movie)
             pet.movie.start()
             
@@ -453,7 +572,7 @@ class DesktopPetApp(QMainWindow):
             pet._active_thread = None
             pet.input_box.setPlaceholderText("输入消息...")
         
-        chat_thread = ChatThread(self.ollama_client, message, self.memory_system)
+        chat_thread = ChatThread(self.client, message, self.memory_system)
         chat_thread.response_ready.connect(show_response)
         chat_thread.error_occurred.connect(on_error)
         pet._active_thread = chat_thread
@@ -462,21 +581,41 @@ class DesktopPetApp(QMainWindow):
     def show_response_bubble(self, pet, response):
         pet.response_label = QLabel(pet)
         pet.response_label.setWordWrap(True)
+        pet.response_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         pet.response_label.setText(response)
         pet.response_label.setStyleSheet("""
             QLabel {
                 background: rgba(255, 255, 255, 250);
                 border-radius: 15px;
                 border: 2px solid #4CAF50;
-                padding: 15px;
-                font-size: 16px;
+                padding: 12px;
+                font-size: 15px;
                 color: #333;
             }
         """)
-        pet.response_label.setFixedSize(max(280, pet.pet_size + 20), 100)
-        pet.response_label.move(5, 15)
+        
+        bubble_width = pet.canvas_width
+        pet.response_label.setFixedWidth(bubble_width)
+        pet.response_label.adjustSize()
+        
+        if pet.response_label.height() < 50:
+            pet.response_label.setFixedHeight(60)
+        elif pet.response_label.height() > 210:
+            pet.response_label.setFixedHeight(210)
+        
+        pet.response_label.move(0, 16)
         pet.response_label.show()
+        QTimer.singleShot(5000, lambda: self.hide_response_and_restore(pet))
         QTimer.singleShot(8000, pet.response_label.close)
+
+    def hide_response_and_restore(self, pet):
+        pet.is_xixi = False
+        if not pet.is_hovering and not pet.is_sleeping and not pet.is_swanan:
+            pet.movie.stop()
+            pet.movie = QMovie(pet.gif_path)
+            pet.movie.setScaledSize(QPixmap(pet.gif_path).size().scaled(150, 150, Qt.KeepAspectRatio))
+            pet.gif_label.setMovie(pet.movie)
+            pet.movie.start()
 
     def add_pet_dialog(self):
         colors = [("粉色猫咪", "#FFB6C1"), ("蓝色小狗", "#87CEEB"), ("绿色青蛙", "#90EE90"), ("橙色狐狸", "#FFD700")]

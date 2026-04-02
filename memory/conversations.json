@@ -1,17 +1,1 @@
-[
-  {
-    "timestamp": "2026-04-01T23:31:06.913609",
-    "user": "今天广州天气如何？",
-    "pet": "发生了一点小问题: the JSON object must be str, bytes or bytearray, not dict"
-  },
-  {
-    "timestamp": "2026-04-01T23:32:03.589805",
-    "user": "今天广州天气如何",
-    "pet": "发生了一点小问题: the JSON object must be str, bytes or bytearray, not dict"
-  },
-  {
-    "timestamp": "2026-04-01T23:38:50.167274",
-    "user": "今天广州天气如何？",
-    "pet": "嘎嘎~主人主人！YBduckyo查到啦～（扑腾翅膀✨）广州今天气温23°C，是有点多云的舒服天气哦🌤️！湿度73%记得补水鸭💦，风速9km/h的话...出门可以戴小帽子防风呢！（歪头）要不要带把小雨伞？虽然没预报下雨，但YBduckyo总觉得主人需要被保护嘛～（掏出自己的小鸭玩偶递过去）🩷"
-  }
-]
+[]

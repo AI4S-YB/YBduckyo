@@ -4,10 +4,14 @@ import re
 from typing import Dict, List, Optional, Callable
 
 try:
-    from duckduckgo_search import DDGS
+    from ddgs import DDGS
     HAS_DDGS = True
 except ImportError:
-    HAS_DDGS = False
+    try:
+        from duckduckgo_search import DDGS
+        HAS_DDGS = True
+    except ImportError:
+        HAS_DDGS = False
 
 
 class ToolResult:
@@ -27,7 +31,7 @@ class ToolResult:
 class WebSearchTool:
     def __init__(self):
         self.name = "web_search"
-        self.description = "搜索互联网获取最新信息。适用于回答需要最新资讯、新闻或实时数据的问题。输入搜索关键词，返回搜索结果摘要。"
+        self.description = "搜索网页获取信息。适用于查询一般知识、百科、概念解释等。输入关键词，返回相关网页摘要。"
     
     def execute(self, query: str) -> ToolResult:
         try:
@@ -41,15 +45,103 @@ class WebSearchTool:
                         return ToolResult(True, content)
                     return ToolResult(False, "", "未找到相关结果")
             else:
-                return ToolResult(False, "", "搜索功能未安装，请运行: pip install duckduckgo-search")
+                return ToolResult(False, "", "搜索功能未安装，请运行: pip install ddgs")
         except Exception as e:
             return ToolResult(False, "", f"搜索出错: {str(e)}")
+
+
+class NewsSearchTool:
+    def __init__(self):
+        self.name = "news_search"
+        self.description = "搜索最新新闻。适用于查询今日新闻、时事热点、最新事件等。输入关键词，返回搜索结果。"
+    
+    def execute(self, query: str) -> ToolResult:
+        try:
+            if HAS_DDGS:
+                with DDGS() as ddgs:
+                    try:
+                        results = list(ddgs.news(query, max_results=5))
+                        if results:
+                            content = "最新新闻:\n"
+                            for i, r in enumerate(results, 1):
+                                date = r.get('date', '')
+                                body = r.get('body', '')[:100]
+                                content += f"{i}. [{date}] {r['title']}\n   {body}\n"
+                            return ToolResult(True, content)
+                    except Exception:
+                        pass
+                    results = list(ddgs.text(query, max_results=5, timelimit='m'))
+                    if results:
+                        content = "网页搜索结果(新闻回退):\n"
+                        for i, r in enumerate(results, 1):
+                            content += f"{i}. {r['title']}\n   {r['body'][:100]}...\n"
+                        return ToolResult(True, content)
+                    return ToolResult(False, "", "未找到相关新闻")
+            else:
+                return ToolResult(False, "", "搜索功能未安装，请运行: pip install ddgs")
+        except Exception as e:
+            return ToolResult(False, "", f"新闻搜索出错: {str(e)}")
+
+
+class ImageSearchTool:
+    def __init__(self):
+        self.name = "image_search"
+        self.description = "搜索图片。适用于查找图片、壁纸等。输入关键词，返回图片搜索结果。"
+    
+    def execute(self, query: str) -> ToolResult:
+        try:
+            if HAS_DDGS:
+                with DDGS() as ddgs:
+                    results = list(ddgs.images(query, max_results=5))
+                    if results:
+                        content = "图片搜索结果:\n"
+                        for i, r in enumerate(results, 1):
+                            content += f"{i}. {r.get('title', '图片')}\n   {r.get('image', r.get('url', ''))}\n"
+                        return ToolResult(True, content)
+                    return ToolResult(False, "", "未找到相关图片，请尝试用web_search搜索图片资源")
+            else:
+                return ToolResult(False, "", "搜索功能未安装，请运行: pip install ddgs")
+        except Exception as e:
+            return ToolResult(False, "", f"图片搜索出错: {str(e)}")
+
+
+class VideoSearchTool:
+    def __init__(self):
+        self.name = "video_search"
+        self.description = "搜索视频。适用于查找视频教程、电影、音乐视频等。输入关键词，返回视频搜索结果。"
+    
+    def execute(self, query: str) -> ToolResult:
+        try:
+            if HAS_DDGS:
+                with DDGS() as ddgs:
+                    try:
+                        results = list(ddgs.videos(query, max_results=5))
+                        if results:
+                            content = "视频搜索结果:\n"
+                            for i, r in enumerate(results, 1):
+                                duration = r.get('duration', '')
+                                title = r.get('title', '视频')[:50]
+                                content += f"{i}. [{duration}] {title}\n   {r.get('content', '')}\n"
+                            return ToolResult(True, content)
+                    except Exception:
+                        pass
+                    results = list(ddgs.text(query + " site:youtube.com OR site:bilibili.com", max_results=5))
+                    if results:
+                        content = "视频搜索结果(网页回退):\n"
+                        for i, r in enumerate(results, 1):
+                            content += f"{i}. {r['title']}\n   {r['href']}\n"
+                        return ToolResult(True, content)
+                    return ToolResult(False, "", "未找到相关视频")
+            else:
+                return ToolResult(False, "", "搜索功能未安装，请运行: pip install ddgs")
+        except Exception as e:
+            return ToolResult(False, "", f"视频搜索出错: {str(e)}")
 
 
 class WebFetchTool:
     def __init__(self):
         self.name = "web_fetch"
-        self.description = "获取指定URL的网页内容。适用于需要查看特定网页详细内容的场景，如获取文章、文档或网页的具体信息。输入URL，返回网页的主要内容（去除HTML标签后的文本）。"
+        self.description = "获取指定URL的网页内容。适用于需要查看特定网页详细内容的场景，如获取文章、文档或网页的具体信息。输入URL，返回网页的主要内容。"
     
     def execute(self, url: str) -> ToolResult:
         try:
@@ -129,6 +221,9 @@ class ToolsManager:
     
     def _register_tools(self):
         self.register(WebSearchTool())
+        self.register(NewsSearchTool())
+        self.register(ImageSearchTool())
+        self.register(VideoSearchTool())
         self.register(WebFetchTool())
         self.register(CalculatorTool())
         self.register(TranslateTool())

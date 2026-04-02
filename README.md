@@ -1,14 +1,11 @@
-# YBduckyo 🐱 
+# 桌面电子宠物 🐱
 
-## Agent时代的QQ宠物文化传承载体; Duckyo文化自发宣传师
-<img width="346" height="410" alt="21cbca06-6405-49a2-8de4-af095f89659b" src="https://github.com/user-attachments/assets/a1ec7a08-6990-4dff-97c7-88e49cc8d1ac" />
-
-您的优秀桌面捣乱大师
+一个可爱的桌面电子宠物应用，支持接入Ollama AI进行智能对话。
 
 ## 功能特点
 
 - 🎨 **卡通可爱风格** - 圆润可爱的卡通宠物形象
-- 🤖 **AI智能对话** - 接入大模型API，支持多种大语言模型，智能在线搜索。
+- 🤖 **AI智能对话** - 接入Ollama API，支持多种大语言模型
 - 💾 **记忆系统** - 宠物能记住你的偏好和历史对话
 - 🐾 **多宠物互动** - 可以同时养多个宠物
 - 🎭 **丰富表情** - 宠物会根据心情显示不同表情
@@ -16,8 +13,8 @@
 
 ## 安装要求
 
-- Python 3.13+
-- Ollama (需要本地运行)/ 或者其他API 
+- Python 3.8+
+- Ollama (需要本地运行)
 
 ## 安装步骤
 
@@ -65,7 +62,7 @@ desktop_pet/
 
 在 `ollama_client.py` 中可以修改:
 - `base_url`: Ollama服务地址 (默认: http://localhost:11434)
-- `model`: 使用的模型
+- `model`: 使用的模型 (默认: llama3)
 - `system_prompt`: 宠物的性格设定
 
 ## 注意事项
