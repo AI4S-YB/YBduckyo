@@ -18,11 +18,11 @@
 
 ## 安装步骤
 ```
-直接下不用装的版本：https://www.deeppgdb.chat/download/YBduckyo.zip
+直接下不用装的版本：https://www.deeppgdb.chat/download/YBduckyo.zip；点exe一键启动
 ```
 
 ```
-点一下start.bat
+或者下source code + 点一下start.bat
 ```
 **手动安装**
 1. 安装依赖:
