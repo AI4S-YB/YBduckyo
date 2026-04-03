@@ -1,4 +1,4 @@
-# YBducyo 优秀而忠诚的桌面捣乱大师 🐱
+<img width="880" height="696" alt="f6daed14-d355-44a0-ab95-8fae2865cf88" src="https://github.com/user-attachments/assets/ee7797d8-4ea3-45d8-987d-35a978c9701f" /># YBducyo 优秀而忠诚的桌面捣乱大师 🐱
 
 **QQ宠物文化传承案例**
 <img width="301" height="359" alt="5a3e6094-ef47-4561-88c9-78a758f9ec77" src="https://github.com/user-attachments/assets/c9f900c4-2342-4a3d-af99-8c1e362bb3c8" />
@@ -17,6 +17,10 @@
 - Python 3.11+
 
 ## 安装步骤
+```
+直接下不用装的版本：https://www.deeppgdb.chat/download/YBduckyo.zip
+```
+
 ```
 点一下start.bat
 ```
