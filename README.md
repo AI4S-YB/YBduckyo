@@ -63,8 +63,8 @@ desktop_pet/
 
 ## 自定义配置
 
-在 `ollama_client.py` 中可以修改:
-- `base_url`: Ollama服务地址 (默认: http://localhost:11434)
+在 `xx_client.py` 中可以修改:
+- `base_url`: 大模型 服务地址 (默认: http://localhost:11434或者暂时为爱发电的mimo)
 - `model`: 使用的模型 (默认: llama3)
 - `system_prompt`: 宠物的性格设定
 
