@@ -2,8 +2,8 @@
 
 **YBduckyo您的桌面添乱大师**
 **CLaw时代的QQ宠物传统文化遗传继承案例**
-<img width="744" height="1129" alt="735f9620-89ec-4daa-8f68-ec9e8e2911d8" src="https://github.com/user-attachments/assets/44bb41a6-a7e3-4e96-a27d-aa0f32147b5c" />
 
+<img width="268" height="370" alt="3e7b2c50-9ea6-4055-a989-862a1e35fc80" src="https://github.com/user-attachments/assets/21bc238f-920a-4cfb-bf40-46ecc5e1fdd9" />
 
 ## 功能特点
 
