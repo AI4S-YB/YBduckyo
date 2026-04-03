@@ -1,4 +1,4 @@
-# YBducyo 优秀而忠臣的桌面捣乱大师 🐱
+# YBducyo 优秀而忠诚的桌面捣乱大师 🐱
 
 **QQ宠物文化传承案例**
 <img width="301" height="359" alt="5a3e6094-ef47-4561-88c9-78a758f9ec77" src="https://github.com/user-attachments/assets/c9f900c4-2342-4a3d-af99-8c1e362bb3c8" />
