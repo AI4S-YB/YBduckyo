@@ -29,8 +29,9 @@ class OllamaClient:
 - 如果用户问"今天几月几号"、"今天星期几"、"现在几号"等日期问题，必须回答：今天是{today_str}，{weekday_str}
 - 如果用户提供联网搜索结果，必须严格按照搜索结果回答
 - 绝对不要编造日期、新闻、数字等信息
+- 当用户询问新闻时，请用可爱的语气播报，可以适当展开描述
 
-回复要求: 50字以内！"""
+回复要求: 正常对话50字以内，新闻播报时可以根据内容适当展开（100-200字）！"""
 
     def check_connection(self) -> bool:
         try:
@@ -50,10 +51,19 @@ class OllamaClient:
             return []
 
     def _need_search(self, message: str) -> tuple:
-        need_keywords = ["今天", "昨天", "明天", "新闻", "天气", "最新", "现在", "当前", 
-                         "热搜", "热搜榜", "几号", "星期几", "日期", "实时", "今日"]
+        always_search_keywords = [
+            "今天", "昨天", "明天", "新闻", "天气", "最新", "现在", "当前",
+            "热搜", "热搜榜", "几号", "星期几", "日期", "实时", "今日",
+            "科技", "财经", "体育", "娱乐", "军事", "社会",
+            "发生了什么", "有什么", "最近", "近期", "近期新闻"
+        ]
         
-        for kw in need_keywords:
+        for kw in always_search_keywords:
+            if kw in message:
+                return True, "news"
+        
+        general_keywords = ["是什么", "怎么样", "如何", "为什么", "哪个", "哪里", "多少", "解释", "介绍", "查询", "上网", "怎么"]
+        for kw in general_keywords:
             if kw in message:
                 return True, "news"
         
@@ -67,6 +77,13 @@ class OllamaClient:
         if any(kw in query for kw in ["几号", "星期几", "几月", "日期"]):
             now = datetime.now()
             search_query = f"{now.year}年{now.month}月{now.day}日"
+        
+        try:
+            result = self.tools_manager.execute("rss_news", {"query": search_query})
+            if result.success:
+                return result.content
+        except Exception:
+            pass
         
         tool_map = {
             "news": "news_search",
@@ -103,7 +120,7 @@ class OllamaClient:
 【联网搜索结果】
 {search_result}
 
-请根据以上搜索结果回答用户问题。如果搜索结果有用，简要总结回答；如果搜索失败，直接说不知道。50字以内。"""
+请根据以上搜索结果回答用户问题。如果搜索结果有用，简要总结回答。新闻类问题可以适当展开描述（100-200字），普通问题回复50字以内。"""
                 messages.append({"role": "user", "content": enhanced_message})
             else:
                 messages.append({"role": "user", "content": message})

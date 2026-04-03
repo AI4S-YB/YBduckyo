@@ -251,7 +251,10 @@ class PetWindow(QWidget):
         if not message:
             return
         
-        need_search = any(kw in message for kw in ["今天", "昨天", "明天", "新闻", "天气", "最新", "现在", "热搜", "几号", "星期几"])
+        need_search_keywords = ["今天", "昨天", "明天", "新闻", "天气", "最新", "现在", "热搜", "几号", "星期几",
+                               "是什么", "怎么样", "如何", "为什么", "哪个", "哪里", "多少", "介绍", "科技", "财经", "体育", "娱乐",
+                               "上网", "怎么"]
+        need_search = any(kw in message for kw in need_search_keywords)
         
         self.movie.stop()
         if Path(self.gif_thinking_path).exists():

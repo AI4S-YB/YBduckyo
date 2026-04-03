@@ -213,6 +213,42 @@ class WeatherTool:
             return ToolResult(False, "", f"获取天气失败: {str(e)}")
 
 
+class RssNewsTool:
+    def __init__(self):
+        self.name = "rss_news"
+        self.description = "获取中文实时新闻。支持分类：综合、科技、财经、体育、娱乐、军事、社会。输入关键词和分类，返回最新新闻列表（包含标题、时间、来源、摘要、链接）。"
+    
+    def execute(self, query: str) -> ToolResult:
+        try:
+            keyword = ""
+            category = "综合"
+            
+            categories = ["综合", "科技", "财经", "体育", "娱乐", "军事", "社会"]
+            for cat in categories:
+                if cat in query:
+                    category = cat
+                    keyword = query.replace(cat, "").replace("新闻", "").strip()
+                    break
+            
+            if not keyword:
+                keyword = query.replace("新闻", "").replace("最新", "").replace("今天", "").replace("今日", "").strip()
+            
+            try:
+                from news_sources import get_news, format_news
+            except ImportError:
+                return ToolResult(False, "", "新闻模块未安装，请确保 news_sources.py 存在")
+            
+            news_list = get_news(category, limit=8, keyword=keyword)
+            
+            if news_list:
+                content = format_news(news_list, show_url=True)
+                return ToolResult(True, content)
+            else:
+                return ToolResult(False, "", "未获取到新闻，可能网络有问题")
+        except Exception as e:
+            return ToolResult(False, "", f"获取新闻失败: {str(e)}")
+
+
 class ToolsManager:
     def __init__(self):
         self.tools: List[Dict] = []
@@ -220,6 +256,7 @@ class ToolsManager:
         self._register_tools()
     
     def _register_tools(self):
+        self.register(RssNewsTool())
         self.register(WebSearchTool())
         self.register(NewsSearchTool())
         self.register(ImageSearchTool())
