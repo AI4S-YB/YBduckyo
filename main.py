@@ -421,6 +421,20 @@ class PetWindow(QWidget):
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton:
             self.show_context_menu(event.globalPos())
+        elif event.button() == Qt.LeftButton:
+            self.drag_start_pos = event.globalPos()
+            self.is_dragging = True
+
+    def mouseMoveEvent(self, event):
+        if hasattr(self, 'is_dragging') and self.is_dragging and event.buttons() == Qt.LeftButton:
+            delta = event.globalPos() - self.drag_start_pos
+            self.position = self.position + delta
+            self.move(self.position)
+            self.drag_start_pos = event.globalPos()
+
+    def mouseReleaseEvent(self, event):
+        if hasattr(self, 'is_dragging'):
+            self.is_dragging = False
 
     def show_context_menu(self, pos):
         menu = QMenu(self)
