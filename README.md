@@ -1,4 +1,6 @@
-<img width="880" height="696" alt="f6daed14-d355-44a0-ab95-8fae2865cf88" src="https://github.com/user-attachments/assets/ee7797d8-4ea3-45d8-987d-35a978c9701f" /># YBducyo 优秀而忠诚的桌面捣乱大师 🐱
+# YBducyo 优秀而忠诚的桌面捣乱大师 🐱
+<img width="266" height="378" alt="c304d1fb-c3ad-452e-b9a0-e9c73d9b63fa" src="https://github.com/user-attachments/assets/03456d1e-f0a0-4b53-bdac-79b0a2f659db" />
+
 
 **QQ宠物文化传承案例**
 
@@ -11,6 +13,7 @@
 - 🐾 **多宠物互动** - 可以同时养多个宠物
 - 🎭 **丰富表情** - 宠物会根据心情显示不同表情（会睡觉）
 - 🚶 **桌面游走** - 宠物会在桌面上自由移动
+
 
 ## 安装要求
 
